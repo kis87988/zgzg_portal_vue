@@ -6,8 +6,6 @@ import 'element-ui/lib/theme-chalk/index.css'
 import GAuth from 'vue-google-oauth2'
 Vue.config.productionTip = false
 Vue.use(ElementUI)
-console.log(process.env)
-
 Vue.use(GAuth, {
   apiKey: process.env.VUE_APP_GOOGLE_API_KEY,
   clientId: process.env.VUE_APP_GOOGLE_CLIENTID,
