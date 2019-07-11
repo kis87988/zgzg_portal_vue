@@ -22,6 +22,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 /* eslint-disable */
 export default {
   name: "Portal",
@@ -71,12 +72,21 @@ export default {
       {
         email:this.$gAuth.GoogleAuth.currentUser.get().getBasicProfile().getEmail(),
         access_token:this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().access_token,
-        first_issued_at:this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().first_issued_at,
+        first_issued_at: new Date(this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().first_issued_at),
         id_token:this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().id_token,
         login_hint:this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().login_hint,
-        expires_at:this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().expires_at,
+        expires_at:new Date(this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().expires_at),
         expires_in:this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().expires_in,
+        ip_address: "1.1.1.1",
+        action: "view",
       }
+      axios.post(`http://127.0.0.1:8000/api/UserAccessRecord/`, this.profile)
+      .then(response => {
+        console.log(response)
+      })
+      .catch(e => {
+        this.errors.push(e)
+      })
     }
   },
   created() 
