@@ -15,8 +15,71 @@
         v-if="isSignIn"
         :disabled="!isInit"
       >sign out</el-button>
-      <el-input placeholder="Please input" v-if="isSignIn" v-model="profile.email"></el-input>
-      <i class="fas fa-edit"></i>
+      <br />
+      <br />
+      <el-progress v-if="isSignIn && postReady!=true" v-loading.fullscreen.lock="postReady!=true" type="none"></el-progress>
+      <el-form v-if="postReady">
+          <el-form-item label="Sign in Email Address:" :disabled="true">
+            <el-input v-model="profile.email" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="Sign up Email Address:">
+            <el-input v-model="profile.data.EmailAddress" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="Chinese Name:">
+            <el-input v-model="profile.data.ChineseName" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="Prefer FirstName:">
+            <el-input v-model="profile.data.FirstName" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="Last Name:">
+            <el-input v-model="profile.data.LastName" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="Nick Name:">
+            <el-input v-model="profile.data.NickName" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="WechatID:">
+            <el-input v-model="profile.data.WechatID" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="T-Shirt Size:">
+            <el-input v-model="profile.data.TShirtSize" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="Dietary Restriction:">
+            <el-input v-model="profile.data.DietaryRestriction" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="Zgid:">
+            <el-input v-model="profile.data.Zgid" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="Zgid Email:">
+            <el-input v-model="profile.data.ZgidEmail" :disabled="true"></el-input>
+          </el-form-item>
+          <el-form-item label="Phone Number:">
+            <el-input v-model="profile.data.PhoneNumber"></el-input>
+          </el-form-item>
+          <el-form-item label="Reimbursement Method:">
+            <el-select v-model="profile.data.ReimbursementMethod" >
+              <el-option v-for="item in ReimbursementMethodOptions" :label="item" :key="item"  :value="item">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item v-if="profile.data.ReimbursementMethod != '我没有报销账户'" label="Reimbursement Account Type:">
+            <el-select v-model="profile.data.ReimbursementAccountType" value-key="profile.data.ReimbursementAccountType">
+              <el-option v-for="item in ReimbursementAccountTypeOptions" :label="item" :key="item"  :value="item">
+              </el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item v-if="profile.data.ReimbursementAccountType == 'Email' &&profile.data.ReimbursementMethod != '我没有报销账户'" label="Reimbursement Account Email:">
+            <el-input v-model="profile.data.ReimbursementAccountEmail"></el-input>
+          </el-form-item>
+          <el-form-item v-if="profile.data.ReimbursementAccountType == 'Phone' && profile.data.ReimbursementMethod != '我没有报销账户'" label="Reimbursement Account Phone Number:">
+            <el-input v-model="profile.data.ReimbursementAccountPhoneNumber" ></el-input>
+          </el-form-item>
+        <el-button
+          type="primary"
+          icon="fas fa-edit"
+          @click="updateProfile"
+          :disabled="!isInit"
+        >update</el-button>
+      </el-form>
     </el-row>
   </div>
 </template>
@@ -26,18 +89,31 @@ import axios from 'axios'
 /* eslint-disable */
 export default {
   name: "Portal",
-  // props: {
-  //   msg: String
-  // },
   data() {
     return {
       isInit: false,
       isSignIn: false,
+      postReady: false,
       profile:{},
+      ReimbursementMethodOptions: ["我没有报销账户","Zelle(Quickpay)",
+       "Paypal"],
+      ReimbursementAccountTypeOptions: ["Email","Phone"]
     }
   },
   methods: 
   {
+    async updateProfile()
+    {
+      this.postReady=false
+      await axios.put(`http://127.0.0.1:8000/api/UserAccessRecord/`, this.profile)
+      .then(async response => {
+        this.profile.data = response.data
+        this.postReady=true
+      })
+      .catch(e => {
+        this.errors.push(e)
+      })
+    },
     handleClickSignIn() 
     {
       this.$gAuth
@@ -52,7 +128,6 @@ export default {
           //on fail do something
         });
     },
-
     handleClickSignOut() 
     {
       this.$gAuth
@@ -60,13 +135,14 @@ export default {
         .then(() => {
           //on success do something
           this.isSignIn = this.$gAuth.isAuthorized
+          this.postReady = false
           this.profile={}
         })
         .catch(error => {
           //on fail do something
         });
     },
-    doSignInJob()
+    async doSignInJob()
     {
       this.profile=
       {
@@ -77,21 +153,27 @@ export default {
         login_hint:this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().login_hint,
         expires_at:new Date(this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().expires_at),
         expires_in:this.$gAuth.GoogleAuth.currentUser.get().getAuthResponse().expires_in,
-        ip_address: "1.1.1.1",
-        action: "view",
+        ip_address: this.client_ip,
+        data:{},
       }
-      axios.post(`http://127.0.0.1:8000/api/UserAccessRecord/`, this.profile)
-      .then(response => {
-        console.log(response)
+      await axios.post(`http://127.0.0.1:8000/api/UserAccessRecord/`, this.profile)
+      .then(async response => {
+        this.profile.data = response.data
+        this.postReady=true
       })
       .catch(e => {
         this.errors.push(e)
       })
-    }
+    },
   },
-  created() 
+  async created() 
   {
     let that = this;
+    await axios.get(`http://www.geoplugin.net/json.gp`)
+      .then(async response => {
+        this.client_ip = response.data.geoplugin_request
+      })
+
     let checkGauthLoad = setInterval(function() {
       that.isInit = that.$gAuth.isInit
       that.isSignIn = that.$gAuth.isAuthorized
@@ -101,6 +183,7 @@ export default {
         clearInterval(checkGauthLoad)
       }
     }, 1000)
+
   },
 };
 </script>
