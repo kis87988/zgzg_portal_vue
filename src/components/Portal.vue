@@ -117,7 +117,7 @@ export default {
   name: "Portal",
   data() {
     return {
-      error: [],
+      errors: [],
       isInit: false,
       isSignIn: false,
       postReady: false,
@@ -166,13 +166,19 @@ export default {
         if (this.profile.data.ReimbursementMethod == "我没有报销账户")
           this.profile.data.ReimbursementAccountType = "我没有报销账户";
         await axios
-          .put(`http://127.0.0.1:8000/api/UserAccessRecord/`, this.profile)
+          .put(
+            `http://${process.env.VUE_APP_API_HOST_IP}/api/UserAccessRecord/`,
+            this.profile
+          )
           .then(async response => {
-            this.profile.data = response.data;
-            this.postReady = true;
+            if (this.handleResponseStatus(response)) {
+              this.profile.data = response.data;
+              this.postReady = true;
+            }
           })
-          .catch(error => {
-            this.errors.push(error);
+          .catch(e => {
+            this.handleResponseStatus(e.response);
+            this.errors.push(e);
           });
       }
     },
@@ -183,11 +189,12 @@ export default {
           this.isSignIn = this.$gAuth.isAuthorized;
           if (this.isSignIn) this.doSignInJob();
         })
-        .catch(error => {
-          this.errors.push(error);
+        .catch(e => {
+          this.handleResponseStatus(e.response);
+          this.errors.push(e);
         });
     },
-    handleClickSignOut() {
+    async handleClickSignOut() {
       this.$gAuth
         .signOut()
         .then(() => {
@@ -196,8 +203,9 @@ export default {
           this.postReady = false;
           this.profile = {};
         })
-        .catch(error => {
-          this.errors.push(error);
+        .catch(e => {
+          this.handleResponseStatus(e.response);
+          this.errors.push(e);
         });
     },
     async doSignInJob() {
@@ -226,14 +234,34 @@ export default {
         data: {}
       };
       await axios
-        .post(`http://127.0.0.1:8000/api/UserAccessRecord/`, this.profile)
+        .post(
+          `http://${process.env.VUE_APP_API_HOST_IP}/api/UserAccessRecord/`,
+          this.profile
+        )
         .then(async response => {
-          this.profile.data = response.data;
-          this.postReady = true;
+          if (this.handleResponseStatus(response)) {
+            this.profile.data = response.data;
+            this.postReady = true;
+          }
         })
         .catch(e => {
+          this.handleResponseStatus(e.response);
           this.errors.push(e);
         });
+    },
+    async handleResponseStatus(response) {
+      let status = response.status;
+      if (status == 201 || status == 200) return true;
+      else if (status == 400) {
+        this.$alert("bad request. Please contact info-center@zgzg.io");
+      } else if (status == 401) {
+        this.$alert("Unauthorized request");
+        await this.handleClickSignOut();
+      } else if (status == 404) {
+        this.$alert("data not found. Please contact info-center@zgzg.io");
+        await this.handleClickSignOut();
+      }
+      return false;
     }
   },
   async created() {
