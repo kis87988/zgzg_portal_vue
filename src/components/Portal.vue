@@ -8,6 +8,18 @@
         v-if="!isSignIn"
         :disabled="!isInit"
       >sign in</el-button>
+      &nbsp;
+      <a
+        href="https://accounts.google.com/signin/v2/recoveryidentifier?hd=zgzg.io"
+        target="_blank"
+      >
+        <el-button
+          type="primary"
+          icon="fas fa-edit"
+          v-if="!isSignIn"
+          :disabled="!isInit"
+        >Reset Password</el-button>
+      </a>
       <el-button
         type="primary"
         icon="fas fa-edit"
@@ -111,8 +123,8 @@
 </template>
 
 <script>
-import axios from "axios";
 /* eslint-disable */
+import axios from "axios";
 export default {
   name: "Portal",
   data() {
@@ -296,6 +308,6 @@ li {
   margin: 0 10px;
 }
 a {
-  color: #42b983;
+  color: #FFFFFF;
 }
 </style>
