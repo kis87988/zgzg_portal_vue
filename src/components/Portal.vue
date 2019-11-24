@@ -111,6 +111,9 @@
         >
           <el-input v-model="profile.data.ReimbursementAccountPhoneNumber"></el-input>
         </el-form-item>
+        <el-form-item label="2020 Zgla PromoCode:">
+          <el-input v-model="profile.data.PromoCode2020" :disabled="true"></el-input>
+        </el-form-item>
         <el-button
           type="primary"
           icon="fas fa-edit"
