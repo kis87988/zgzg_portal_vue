@@ -136,7 +136,6 @@ export default {
       profile: {},
       ReimbursementMethodOptions: [
         "我没有报销账户",
-        "Zelle(Quickpay)",
         "Paypal"
       ],
       ReimbursementAccountTypeOptions: ["Email", "Phone"]
